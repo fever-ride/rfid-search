@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (reader != null && reader.isConnected()) {
                     try {
+                        resultText.setText("");
                         reader.Actions.Inventory.perform();
                     } catch (InvalidUsageException e) {
                         e.printStackTrace();
@@ -167,30 +168,6 @@ public class MainActivity extends AppCompatActivity {
         // Status Event Notification
         public void eventStatusNotify(RfidStatusEvents rfidStatusEvents) {
             Log.d(TAG, "Status Notification: " + rfidStatusEvents.StatusEventData.getStatusEventType());
-            if (rfidStatusEvents.StatusEventData.getStatusEventType() == STATUS_EVENT_TYPE.HANDHELD_TRIGGER_EVENT) {
-                if (rfidStatusEvents.StatusEventData.HandheldTriggerEventData.getHandheldEvent() == HANDHELD_TRIGGER_EVENT_TYPE.HANDHELD_TRIGGER_PRESSED) {
-                    new Thread(() -> {
-                        try {
-                            reader.Actions.Inventory.perform();
-                        } catch (InvalidUsageException e) {
-                            e.printStackTrace();
-                        } catch (OperationFailureException e) {
-                            e.printStackTrace();
-                        }
-                    }).start();
-                }
-                if (rfidStatusEvents.StatusEventData.HandheldTriggerEventData.getHandheldEvent() == HANDHELD_TRIGGER_EVENT_TYPE.HANDHELD_TRIGGER_RELEASED) {
-                    new Thread(() -> {
-                        try {
-                            reader.Actions.Inventory.stop();
-                        } catch (InvalidUsageException e) {
-                            e.printStackTrace();
-                        } catch (OperationFailureException e) {
-                            e.printStackTrace();
-                        }
-                    }).start();
-                }
-            }
         }
     }
 }
