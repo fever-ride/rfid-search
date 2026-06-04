@@ -6,7 +6,9 @@ A minimal one-button Android app that connects to a Zebra RFID handheld scanner 
 
 1. App launches → automatically connects to the first available RFID reader
 2. Press the **Search** button → calls `reader.Actions.Inventory.perform()`
-3. Reader scans all RFID tags in range → tag EPCs are displayed on screen
+3. Reader scans all RFID tags in range → SDK fires `eventReadNotify()` callback
+4. Tag EPCs are collected into a thread-safe `Set` (duplicates removed automatically)
+5. Results displayed on screen as `Found X tag(s): [EPC list]`
 
 ## Note on "Search"
 

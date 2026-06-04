@@ -12,6 +12,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.zebra.rfid.api3.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -23,6 +26,9 @@ public class MainActivity extends AppCompatActivity {
     TextView statusText;
     TextView resultText;
     private EventHandler eventHandler;
+    // Thread-safe Set to deduplicate tag EPCs across multiple read events
+    // (eventReadNotify runs on background thread, button click on main thread)
+    private final Set<String> scannedTags = Collections.synchronizedSet(new HashSet<>());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (reader != null && reader.isConnected()) {
                     try {
+                        // Clear previous results before each new scan
+                        scannedTags.clear();
                         resultText.setText("");
                         reader.Actions.Inventory.perform();
                     } catch (InvalidUsageException e) {
@@ -148,20 +156,21 @@ public class MainActivity extends AppCompatActivity {
     // Read/Status Notify handler
     // Implement the RfidEventsLister class to receive event notifications
     public class EventHandler implements RfidEventsListener {
-        // Read Event Notification
+        // Read Event Notification (called automatically by SDK when tags are detected)
         public void eventReadNotify(RfidReadEvents e) {
             TagData[] myTags = reader.Actions.getReadTags(100);
             if (myTags != null) {
-                final StringBuilder sb = new StringBuilder();
-                for (int index = 0; index < myTags.length; index++) {
-                    sb.append(myTags[index].getTagID()).append("\n");
+                // Add each tag EPC to the Set (duplicates are ignored automatically)
+                for (TagData tag : myTags) {
+                    scannedTags.add(tag.getTagID());
                 }
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        resultText.append(sb.toString());
-                    }
-                });
+                // Build display string from deduplicated set
+                final StringBuilder sb = new StringBuilder();
+                for (String epc : scannedTags) {
+                    sb.append(epc).append("\n");
+                }
+                // Update UI on main thread
+                runOnUiThread(() -> resultText.setText("Found " + scannedTags.size() + " tag(s):\n\n" + sb.toString()));
             }
         }
 
