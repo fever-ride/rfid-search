@@ -15,10 +15,10 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static Readers readers;
-    private static ArrayList availableRFIDReaderList;
-    private static ReaderDevice readerDevice;
-    private static RFIDReader reader;
+    private Readers readers;
+    private ArrayList<ReaderDevice> availableRFIDReaderList;
+    private ReaderDevice readerDevice;
+    private RFIDReader reader;
     private static String TAG = "DEMO";
     TextView statusText;
     TextView resultText;
@@ -56,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
         if (readers == null) {
             readers = new Readers(this, ENUM_TRANSPORT.SERVICE_SERIAL);
         }
+
+        // Connect to RFID reader in background thread
         new Thread(() -> {
             boolean connected = false;
             try {
@@ -91,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
+    // Configure reader settings
     private void ConfigureReader() {
         if (reader.isConnected()) {
             TriggerInfo triggerInfo = new TriggerInfo();
